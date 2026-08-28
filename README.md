@@ -7,11 +7,7 @@ Patrick Halder, Lothar Kiltz, Hannes Homburger, Johannes Reuter, Matthias Althof
 IEEE Open Journal of Intelligent Transportation Systems, 2026.
 DOI: https://doi.org/10.1109/OJITS.2026.3726082
 
-## Teaser Video
-
 ![Intersection scenario teaser](cr_scenario.gif)
-
-Full video: [cr_scenario.mp4](cr_scenario.mp4)
 
 ## Repository Structure (Experiment Reproduction)
 

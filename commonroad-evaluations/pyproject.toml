@@ -1,0 +1,40 @@
+[project]
+name = "lex-stl-planner"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Patrick Halder",email = "patrick.halder@tum.de"},
+]
+dependencies = [
+    "matplotlib<3.9,>=3.1.2",
+    "commonroad-io<2025.0,>=2024.3",
+    "commonroad-clcs<2026.0.0,>=2025.2.0; python_version >= \"3.12\" and python_version < \"3.14\"",
+    "commonroad-drivability-checker==2024.1; python_version >= \"3.12\" and python_version < \"3.14\"",
+    "commonroad-route-planner==2025.0.1; python_version >= \"3.12\" and python_version < \"3.14\"",
+    "shapely<3.0.0,>=2.1.1",
+    "tabulate<1.0.0,>=0.9.0",
+    "colorcet<4.0.0,>=3.1.0",
+    "pybind11>=3.0.1",
+    "optuna>=3.6.0",
+]
+requires-python = ">=3.12,<3.13"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+post_install = "mypy --install-types --non-interactive ."
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18.2",
+]

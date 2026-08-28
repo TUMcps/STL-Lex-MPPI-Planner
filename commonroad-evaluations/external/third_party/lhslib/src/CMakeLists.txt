@@ -1,0 +1,71 @@
+cmake_minimum_required(VERSION 2.8)
+project(LHSLIB)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# CMAKE_BUILD_TYPE expected Release, Debug, RelWithDebInfo
+message(VERBOSE, "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+# BUILD_TYPE Clang, Coverage, Clang-san, Gcc-san
+message(VERBOSE, "BUILD_TYPE: ${BUILD_TYPE}")
+
+# Version file handling removed for integration
+
+# Doxygen config removed for integration
+
+if (MSVC)
+    message(VERBOSE, "Windows Build")
+  # disable unreferenced formal parameters (4100) and constant conditional expression (4127) and special noexcept from asserterror (26439) and not initialized variables (26495)
+  set(CMAKE_CXX_FLAGS "/EHsc /W4 /WX /wd4100 /wd4127 /wd26439 /wd26495")
+  set(CMAKE_CXX_FLAGS_DEBUG "/Od /Zi")
+  set(CMAKE_CXX_FLAGS_RELEASE "/Ox")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /Zi")
+elseif (BUILD_TYPE STREQUAL "Clang")
+    message(VERBOSE, "Clang Build")
+    # sudo apt-get install clang llvm
+    # compiler options from https://www.stats.ox.ac.uk/pub/bdr/Rconfig/r-devel-linux-x86_64-fedora-clang
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -frtti")
+    if (BUILD_TYPE STREQUAL "Clang-san")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined -fno-sanitize=float-divide-by-zero -fno-sanitize=alignment -fno-omit-frame-pointer")
+        set(CMAKE_CXX_FLAGS_DEBUG "-g -O1")
+        set(CMAKE_CXX_FLAGS_RELEASE "-g -O1")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O1")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined,address")
+	set(CMAKE_CXX_LINK_EXECUTABLE "clang++")
+    else ()
+        set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2")
+    endif()
+else ()
+    message(VERBOSE, "Gcc Build")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -m64 -Wall -pedantic -mtune=native -Werror -Wno-unknown-pragmas -Wno-long-long")
+
+    if (BUILD_TYPE STREQUAL "Coverage")
+        message(VERBOSE, "Gcc Coverage Build")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+        set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+        set(CMAKE_CXX_FLAGS_RELEASE "-g -O0")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O0")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcov")
+    elseif (BUILD_TYPE STREQUAL "Gcc-san")
+        message(VERBOSE, "Gcc-san Build")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined,bounds-strict -fno-omit-frame-pointer")
+        set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+        set(CMAKE_CXX_FLAGS_RELEASE "-g -O2")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined -pthread")
+    else ()
+        message(VERBOSE, "Gcc Build")
+        set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2")
+    endif()
+endif()
+
+message(VERBOSE, "CXXFLAGS: ${CMAKE_CXX_FLAGS}")
+message(VERBOSE, "Debug: ${CMAKE_CXX_FLAGS_DEBUG}")
+message(VERBOSE, "Release: ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "Linker FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
+
+add_subdirectory(lhslib)
+
+# Library only - tests removed for integration

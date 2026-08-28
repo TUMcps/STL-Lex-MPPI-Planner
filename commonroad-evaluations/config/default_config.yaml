@@ -1,0 +1,401 @@
+debugging:
+    verbose: True
+
+planner:
+    general:
+        mpc_horizon: 70 # [steps]
+        time_horizon: 15 #[steps]
+        dt: 0.2 #[s]
+
+    mppi:
+        n_samples_initial: 1000 # Initial number of samples M_init
+        num_iterations: 20 # Number of iterations J
+        initial_covariance: [[0.1, 0.0], [0.0, 6.0]] # Initial covariance Sigma
+        initial_lambda: 1. # Initial temperature lambda
+        gamma: 0.8 # Exponential decay factor (used by "classic")
+        beta_decay_method: "cosine" # "classic", "linear", or "cosine"
+        beta_min: 1e-6 # Minimum beta value for shrinking
+        sample_count_decay_method: "cosine" # "constant", "linear", or "cosine"
+        n_samples_final: 100 # Final number of samples M_final
+        sampling_method: "randomLHS" # Sampling method: "pureRandom", "randomLHS", "improvedLHS", or "maximinLHS"
+        seed: 123 # Random seed for reproducibility
+        return_best_sample: True # If True, return the best overall sample instead of the weighted MPPI average solution
+
+    preemptive_mppi:
+        n_samples_initial: 1000 # Initial number of samples M_init
+        num_iterations: 20 # Number of iterations J
+        initial_covariance: [[0.1, 0.0], [0.0, 6.0]] # Initial covariance Sigma
+        initial_lambda: 1. # Initial temperature lambda
+        gamma: 0.8 # Exponential decay factor (used by "classic")
+        beta_decay_method: "cosine" # "classic", "linear", or "cosine"
+        beta_min: 1e-6 # Minimum beta value for shrinking
+        sample_count_decay_method: "cosine" # "constant", "linear", or "cosine"
+        n_samples_final: 100 # Final number of samples M_final
+        sampling_method: "randomLHS" # Sampling method: "pureRandom", "randomLHS", "improvedLHS", or "maximinLHS"
+        seed: 123 # Random seed for reproducibility
+        return_best_sample: True # If True, return the best preemptively feasible sample
+
+    random_shooting:
+        n_samples: 11000 # Number of samples (single iteration, no refinement)
+        covariance_0: 0.07 # Variance for steering rate input
+        covariance_1: 5.09 # Variance for acceleration input
+        sampling_method: "randomLHS" # Sampling method: "pureRandom", "randomLHS", "improvedLHS", or "maximinLHS"
+        seed: 123 # Random seed for reproducibility
+
+    const_input:
+        delta_dot_count: 21 # Number of delta_dot samples
+        accel_count: 21 # Number of acceleration samples
+
+    frenet:
+        t_min: 2.0 # [s] (t_max = time_horizon * dt)
+        n_t: 6 # Number of t samples
+        v_min: 0.0 # [m/s]
+        v_max: 20.0 # [m/s]
+        n_v: 47 # Number of v samples
+        d_min: -5.0 # [m]
+        d_max: 5.0 # [m]
+        n_d: 39 # Number of d samples
+
+    cmaes:
+        # population * generations ≈ 11000
+        population_size: 74 # Population size (0 = CMA-ES default: 4 + floor(3*ln(n)))
+        gen: 148 # Number of CMA-ES generations
+        sigma0: 0.05 # Initial step-size (controls exploration radius)
+        ftol: 0.0 # Stopping criterion: fitness tolerance
+        xtol: 0.0 # Stopping criterion: decision vector tolerance
+        force_bounds: True # Enforce box bounds (u_min, u_max) during evolution
+        memory: False # If True, CMA-ES retains internal state between MPC steps
+        seed: 123 # Random seed for reproducibility
+        return_best_sample: True # Return the champion solution
+        cc: -1.0 # Backward time horizon for evolution path (-1 = auto)
+        cs: -1.0 # Cumulation for step-size control (-1 = auto)
+        c1: -1.0 # Learning rate for rank-one update (-1 = auto)
+        cmu: -1.0 # Learning rate for rank-mu update (-1 = auto)
+
+    sa:
+        # 10*1*37*30 ≈ 11100 evaluations
+        Ts: 24.39 # Starting temperature (deterioration with 37% acceptance chance)
+        Tf: 0.02 # Final temperature
+        n_T_adj: 10 # Number of temperature adjustments in the annealing schedule
+        n_range_adj: 1 # Number of range adjustments at each constant temperature
+        bin_size: 37 # Number of mutations per acceptance rate computation
+        start_range: 0.71 # Starting range for mutations (in (0, 1])
+        seed: 123 # Random seed for reproducibility
+
+    de:
+        # population * generations ≈ 11000
+        gen: 523 # Number of DE generations
+        population_size: 21 # Population size (must be >= 5)
+        F: 0.6 # Weight coefficient / scaling factor (in [0, 1])
+        CR: 0.96 # Crossover probability (in [0, 1])
+        variant: 2 # Mutation variant (1-10, default 2 = rand/1/exp)
+        ftol: 0.0 # Stopping criterion: fitness tolerance
+        xtol: 0.0 # Stopping criterion: decision vector tolerance
+        seed: 123 # Random seed for reproducibility
+
+scenario:
+    corridor_width: 4.0 # [m]
+    stop_sign_area_length: 8.0 # [m]
+    intersection_lateral_distance: 7.0 # [m]
+    intersection_min_s_shift: -3.0 # [m]
+    intersection_max_s_shift: 1.0 # [m]
+    bus_stop_length: 6.0 # [m]
+
+ego:
+    length: 4.0 # [m]
+    width: 2.5 # [m]
+    wheel_base: 3.0 # [m]
+    u_min: [-0.3, -8.0] # [v_delta, a]
+    u_max: [0.3, 8.0] # [v_delta, a]
+    v_limits: [0.0, 20.0] # [m/s]: [v_min, v_max]
+    steering_angle_limits: [-0.5, 0.5] # [rad]: [delta_min, delta_max]
+
+cost_function:
+    # Robustness mode options:
+    # - Space
+    # - Smooth
+    # - AGM
+    # - New
+    # - PowerMean
+    # - Duration
+    # - DurationSeverity
+    # - TimeLeft
+    # - TimeRight
+    # - TimeCombined
+    # - SpaceLeftTime
+    robustness_mode: "SpaceLeftTime"
+
+stl:
+    max_nof_obstacles: 5
+    safe_distance: 1.0 # [m]
+    emergency_vehicle_radius: 10.0 # [m]
+    emergency_vehicle_v_target: 3.0 # [m/s]
+    emergency_vehicle_lateral_shift: -1.5 # [m]
+    t_c: 10 # [time steps]
+    t_d: 0.3 # [s]
+    a_abrupt: -6.0 # [m/s^2]
+    obstacle_a_min: -6.0 # [m/s^2]
+    dv_fl: 1.5 # [m/s]
+    v_su: 13.888 # [m/s]
+    max_comfort_a_longitudinal: 5.0 # [m/s^2]
+    max_comfort_a_lateral: 5.0 # [m/s^2]
+    v_ref_sc: 6.333 # [m/s]
+    ds_schedule: 2.0 # [m]
+
+    # Not used in paper
+    v_stop_sign_min: -0.1 # [m/s]
+    v_stop_sign_max: 1.0 # [m/s]
+    t_stop: 5 # [time steps]
+    bus_stop_lateral_tolerance: 0.5 # [m]
+    v_bus_stop_min: -0.1 # [m/s]
+    v_bus_stop_max: 1.0 # [m/s]
+    t_bus_stop: 1 # [time steps]
+
+rules:
+    rulebook_order: [
+            "OPERATIONAL_LIMITS",
+            "COLLISION_AVOIDANCE",
+            "EMERGENCY_VEHICLE",
+            "STATIC_SAFE_DISTANCE",
+            "SAFE_DISTANCE_TO_PRECEDING_VEHICLE",
+            "IN_LANE_DRIVING",
+            "PRIORITY",
+            "SPEED_LIMITS",
+            "UNNECESSARY_BRAKING",
+            "PRESERVES_TRAFFIC_FLOW",
+            "COMFORT",
+            "SCHEDULE",
+            ## --- Not used in Paper ---
+            #"IN_LANE_DRIVING_SIMPLE",
+            #"STOP_AT_STOP_SIGN",
+            #"SERVE_BUS_STOP",
+        ]
+
+    rule_discretization: [
+            "OPERATIONAL_LIMITS":
+                {
+                    "Space": 0.0001,
+                    "Smooth": 0.0001,
+                    "AGM": 0.0001,
+                    "New": 0.0001,
+                    "PowerMean": 0.0001,
+                    "Duration": 0.0001,
+                    "DurationSeverity": 0.0001,
+                    "TimeLeft": 0.0001,
+                    "TimeRight": 0.0001,
+                    "TimeCombined": 0.0001,
+                    "SpaceLeftTime": 0.0001,
+                    "n_intervals": 1,
+                },
+            "COLLISION_AVOIDANCE":
+                {
+                    "Space": 0.0001,
+                    "Smooth": 0.0001,
+                    "AGM": 0.0001,
+                    "New": 0.0001,
+                    "PowerMean": 0.0001,
+                    "Duration": 0.0001,
+                    "DurationSeverity": 0.0001,
+                    "TimeLeft": 0.0001,
+                    "TimeRight": 0.0001,
+                    "TimeCombined": 0.0001,
+                    "SpaceLeftTime": 0.0001,
+                    "n_intervals": 1,
+                },
+            "EMERGENCY_VEHICLE":
+                {
+                    "Space": 3,
+                    "Smooth": 2,
+                    "AGM": 24,
+                    "New": 3,
+                    "PowerMean": 9,
+                    "Duration": 4,
+                    "DurationSeverity": 1,
+                    "TimeLeft": 7,
+                    "TimeRight": 3,
+                    "TimeCombined": 4,
+                    "SpaceLeftTime": 30,
+                    "n_intervals": 31,
+                },
+            "STATIC_SAFE_DISTANCE":
+                {
+                    "Space": 4,
+                    "Smooth": 21,
+                    "AGM": 3,
+                    "New": 10,
+                    "PowerMean": 29,
+                    "Duration": 8,
+                    "DurationSeverity": 6,
+                    "TimeLeft": 3,
+                    "TimeRight": 4,
+                    "TimeCombined": 17,
+                    "SpaceLeftTime": 1,
+                    "n_intervals": 31,
+                },
+            "SAFE_DISTANCE_TO_PRECEDING_VEHICLE":
+                {
+                    "Space": 3,
+                    "Smooth": 30,
+                    "AGM": 13,
+                    "New": 25,
+                    "PowerMean": 28,
+                    "Duration": 29,
+                    "DurationSeverity": 20,
+                    "TimeLeft": 19,
+                    "TimeRight": 22,
+                    "TimeCombined": 22,
+                    "SpaceLeftTime": 9,
+                    "n_intervals": 31,
+                },
+            "IN_LANE_DRIVING":
+                {
+                    "Space": 12,
+                    "Smooth": 7,
+                    "AGM": 6,
+                    "New": 7,
+                    "PowerMean": 5,
+                    "Duration": 18,
+                    "DurationSeverity": 17,
+                    "TimeLeft": 20,
+                    "TimeRight": 17,
+                    "TimeCombined": 18,
+                    "SpaceLeftTime": 27,
+                    "n_intervals": 31,
+                },
+            "PRIORITY":
+                {
+                    "Space": 12,
+                    "Smooth": 19,
+                    "AGM": 5,
+                    "New": 5,
+                    "PowerMean": 20,
+                    "Duration": 8,
+                    "DurationSeverity": 30,
+                    "TimeLeft": 26,
+                    "TimeRight": 27,
+                    "TimeCombined": 6,
+                    "SpaceLeftTime": 30,
+                    "n_intervals": 31,
+                },
+            "SPEED_LIMITS":
+                {
+                    "Space": 20,
+                    "Smooth": 17,
+                    "AGM": 16,
+                    "New": 17,
+                    "PowerMean": 25,
+                    "Duration": 27,
+                    "DurationSeverity": 29,
+                    "TimeLeft": 29,
+                    "TimeRight": 5,
+                    "TimeCombined": 8,
+                    "SpaceLeftTime": 11,
+                    "n_intervals": 31,
+                },
+            "UNNECESSARY_BRAKING":
+                {
+                    "Space": 27,
+                    "Smooth": 11,
+                    "AGM": 12,
+                    "New": 24,
+                    "PowerMean": 19,
+                    "Duration": 11,
+                    "DurationSeverity": 25,
+                    "TimeLeft": 29,
+                    "TimeRight": 17,
+                    "TimeCombined": 6,
+                    "SpaceLeftTime": 7,
+                    "n_intervals": 31,
+                },
+            "PRESERVES_TRAFFIC_FLOW":
+                {
+                    "Space": 24,
+                    "Smooth": 27,
+                    "AGM": 18,
+                    "New": 16,
+                    "PowerMean": 4,
+                    "Duration": 13,
+                    "DurationSeverity": 28,
+                    "TimeLeft": 22,
+                    "TimeRight": 13,
+                    "TimeCombined": 15,
+                    "SpaceLeftTime": 24,
+                    "n_intervals": 31,
+                },
+            "COMFORT":
+                {
+                    "Space": 25,
+                    "Smooth": 15,
+                    "AGM": 20,
+                    "New": 19,
+                    "PowerMean": 1,
+                    "Duration": 14,
+                    "DurationSeverity": 29,
+                    "TimeLeft": 2,
+                    "TimeRight": 20,
+                    "TimeCombined": 21,
+                    "SpaceLeftTime": 19,
+                    "n_intervals": 31,
+                },
+            "SCHEDULE":
+                {
+                    "Space": 6,
+                    "Smooth": 49,
+                    "AGM": 18,
+                    "New": 44,
+                    "PowerMean": 32,
+                    "Duration": 38,
+                    "DurationSeverity": 39,
+                    "TimeLeft": 29,
+                    "TimeRight": 26,
+                    "TimeCombined": 20,
+                    "SpaceLeftTime": 6,
+                    "n_intervals": 31,
+                },
+            # NOT USED IN PAPER
+            "IN_LANE_DRIVING_SIMPLE":
+                {
+                    "Space": 5,
+                    "Smooth": 5,
+                    "AGM": 5,
+                    "New": 10,
+                    "PowerMean": 10,
+                    "Duration": 10,
+                    "DurationSeverity": 10,
+                    "TimeLeft": 10,
+                    "TimeRight": 10,
+                    "TimeCombined": 10,
+                    "SpaceLeftTime": 10,
+                    "n_intervals": 31,
+                },
+            "STOP_AT_STOP_SIGN":
+                {
+                    "Space": 5,
+                    "Smooth": 5,
+                    "AGM": 5,
+                    "New": 10,
+                    "PowerMean": 10,
+                    "Duration": 10,
+                    "DurationSeverity": 10,
+                    "TimeLeft": 10,
+                    "TimeRight": 10,
+                    "TimeCombined": 10,
+                    "SpaceLeftTime": 10,
+                    "n_intervals": 31,
+                },
+            "SERVE_BUS_STOP":
+                {
+                    "Space": 5,
+                    "Smooth": 5,
+                    "AGM": 5,
+                    "New": 10,
+                    "PowerMean": 10,
+                    "Duration": 10,
+                    "DurationSeverity": 10,
+                    "TimeLeft": 10,
+                    "TimeRight": 10,
+                    "TimeCombined": 10,
+                    "SpaceLeftTime": 10,
+                    "n_intervals": 31,
+                },
+        ]

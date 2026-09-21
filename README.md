@@ -34,14 +34,12 @@ Patrick Halder: patrick.halder@tum.de
 ## Citation
 
 ```bibtex
-@ARTICLE{11664127,
-	author={Halder, Patrick and Kiltz, Lothar and Homburger, Hannes and Reuter, Johannes and Althoff, Matthias},
-	journal={IEEE Open Journal of Intelligent Transportation Systems},
-	title={Lexicographic Minimum-Violation Motion Planning using Signal Temporal Logic},
-	year={2026},
-	volume={},
-	number={},
-	pages={1-1},
-	doi={10.1109/OJITS.2026.3726082}
+@Article{Halder2026,
+  author  = {Halder, Patrick and Kiltz, Lothar and Homburger, Hannes and Reuter, Johannes and Althoff, Matthias},
+  journal = {IEEE Open Journal of Intelligent Transportation Systems},
+  title   = {Lexicographic Minimum-Violation Motion Planning using Signal Temporal Logic},
+  year    = {2026},
+  pages   = {2307--2326},
+  volume  = {7},
 }
 ```
